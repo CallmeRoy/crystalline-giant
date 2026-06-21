@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crystalline Giant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e2a;
+    --border: rgba(140, 170, 255, 0.12);
+    --border-hover: rgba(140, 170, 255, 0.28);
+    --text: #e8eaf2;
+    --text-muted: #7a7f96;
+    --crystal: #a78bfa;
+    --crystal-dim: #6d55cc;
+    --crystal-glow: rgba(167, 139, 250, 0.18);
+    --plus-clr: #34d399;
+    --plus-bg: rgba(52, 211, 153, 0.12);
+    --keyword-clr: #a78bfa;
+    --keyword-bg: rgba(167, 139, 250, 0.12);
+    --danger: #f87171;
+    --danger-bg: rgba(248, 113, 113, 0.12);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 4rem;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-top: 1rem;
+  }
+
+  .card-frame {
+    display: inline-block;
+    background: linear-gradient(135deg, #2a1f4e 0%, #1a1330 50%, #0f1a3a 100%);
+    border: 1px solid var(--crystal-dim);
+    border-radius: 16px;
+    padding: 1.25rem 2rem 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 0 40px rgba(109, 85, 204, 0.25), inset 0 1px 0 rgba(167,139,250,0.2);
+  }
+
+  .card-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #c4b5fd;
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 20px rgba(167,139,250,0.5);
+  }
+
+  .card-type {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .power-toughness {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    color: #c4b5fd;
+    margin-top: 8px;
+    opacity: 0.7;
+  }
+
+  .rules-text {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    max-width: 420px;
+    line-height: 1.6;
+    text-align: center;
+    margin: 0 auto;
+  }
+
+  .main {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .section-label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .counters-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    min-height: 80px;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+
+  .counters-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .empty-state {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 2.5;
+  }
+
+  .counter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 13px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: transform 0.15s;
+  }
+  .counter-pill.keyword {
+    background: var(--keyword-bg);
+    color: var(--keyword-clr);
+    border: 1px solid rgba(167,139,250,0.25);
+  }
+  .counter-pill.plus {
+    background: var(--plus-bg);
+    color: var(--plus-clr);
+    border: 1px solid rgba(52,211,153,0.25);
+    font-family: 'Cinzel', serif;
+    font-size: 0.88rem;
+  }
+  .counter-pill.new {
+    animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.4); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .roll-result {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    display: none;
+  }
+
+  .roll-result .result-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .roll-number {
+    font-family: 'Cinzel', serif;
+    font-size: 1.6rem;
+    color: var(--crystal);
+    line-height: 1;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  .result-text {
+    flex: 1;
+  }
+
+  .result-text .rolled-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 2px;
+  }
+
+  .result-text .rolled-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .result-text .rolled-name.plus-color { color: var(--plus-clr); }
+  .result-text .rolled-name.keyword-color { color: var(--keyword-clr); }
+
+  .progress-bar-wrap {
+    margin-bottom: 1.5rem;
+  }
+
+  .progress-track {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--crystal-dim);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .all-done {
+    display: none;
+    background: rgba(167,139,250,0.08);
+    border: 1px solid rgba(167,139,250,0.3);
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.88rem;
+    color: var(--crystal);
+    font-family: 'Cinzel', serif;
+    text-align: center;
+    letter-spacing: 0.03em;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-roll {
+    flex: 1;
+    padding: 13px;
+    border-radius: 12px;
+    background: var(--crystal-dim);
+    color: #e8d5ff;
+    border: none;
+    font-family: 'Cinzel', serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    box-shadow: 0 4px 20px rgba(109,85,204,0.35);
+  }
+  .btn-roll:hover:not(:disabled) {
+    background: #7c5ccf;
+    box-shadow: 0 4px 28px rgba(109,85,204,0.55);
+  }
+  .btn-roll:active:not(:disabled) { transform: scale(0.97); }
+  .btn-roll:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .btn-reset {
+    padding: 13px 20px;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-reset:hover { border-color: var(--border-hover); color: var(--text); }
+
+  .confirm-box {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    margin-top: 10px;
+    font-size: 0.84rem;
+    color: var(--text-muted);
+  }
+
+  .confirm-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .btn-confirm-reset {
+    padding: 7px 16px;
+    border-radius: 8px;
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid rgba(248,113,113,0.25);
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  .btn-confirm-reset:hover { background: rgba(248,113,113,0.2); }
+
+  .btn-cancel {
+    padding: 7px 16px;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  .btn-cancel:hover { color: var(--text); border-color: var(--border-hover); }
+
+  .history-section {
+    margin-top: 2rem;
+  }
+
+  .history-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 0.82rem;
+    animation: slideIn 0.25s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .history-roll-num {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    min-width: 18px;
+  }
+
+  .history-name { color: var(--text); }
+  .history-name.plus { color: var(--plus-clr); }
+  .history-name.keyword { color: var(--keyword-clr); }
+
+  .history-stat {
+    margin-left: auto;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1.75rem 0;
+  }
+
+  @media (max-width: 480px) {
+    .card-name { font-size: 1.2rem; }
+    .buttons { flex-direction: column; }
+    .btn-reset { text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="card-frame">
+    <div class="card-name">Crystalline Giant</div>
+    <div class="card-type">Artifact Creature — Giant</div>
+    <div class="power-toughness">*/∗</div>
+  </div>
+  <p class="rules-text">At the beginning of combat on your turn, choose a counter at random that Crystalline Giant doesn't have on it and put it on the Giant.</p>
+</header>
+
+<main class="main">
+
+  <div class="section-label">Counters on Crystalline Giant</div>
+  <div class="counters-area">
+    <div class="counters-grid" id="countersGrid">
+      <span class="empty-state" id="emptyMsg">No counters yet — roll to begin.</span>
+    </div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label">
+      <span id="progressText">0 of 10 counters</span>
+      <span id="progressPct">0%</span>
+    </div>
+  </div>
+
+  <div class="roll-result" id="rollResult">
+    <div class="result-inner">
+      <div class="roll-number" id="rollNumber">1</div>
+      <div class="result-text">
+        <div class="rolled-label">Counter placed</div>
+        <div class="rolled-name" id="rolledName">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="all-done" id="allDone">
+    ✦ All 10 counters placed — the Giant is fully formed ✦
+  </div>
+
+  <div class="buttons">
+    <button class="btn-roll" id="rollBtn" onclick="rollCounter()">Roll</button>
+    <button class="btn-reset" onclick="askReset()">Reset</button>
+  </div>
+
+  <div class="confirm-box" id="confirmBox">
+    Reset all counters? This can't be undone.
+    <div class="confirm-actions">
+      <button class="btn-confirm-reset" onclick="doReset()">Yes, reset</button>
+      <button class="btn-cancel" onclick="cancelReset()">Cancel</button>
+    </div>
+  </div>
+
+  <div id="historySection" style="display:none;">
+    <div class="divider"></div>
+    <div class="section-label" style="margin-bottom:.75rem;">Roll history</div>
+    <ul class="history-list" id="historyList"></ul>
+  </div>
+
+</main>
+
+<script>
+const COUNTERS = [
+  { name: "flying",       type: "keyword" },
+  { name: "first strike", type: "keyword" },
+  { name: "deathtouch",  type: "keyword" },
+  { name: "hexproof",    type: "keyword" },
+  { name: "lifelink",    type: "keyword" },
+  { name: "menace",      type: "keyword" },
+  { name: "reach",       type: "keyword" },
+  { name: "trample",     type: "keyword" },
+  { name: "vigilance",   type: "keyword" },
+  { name: "+1/+1",       type: "plus"    },
+];
+
+let placed = [];
+let history = [];
+
+function rollCounter() {
+  const available = COUNTERS.filter(c => !placed.find(p => p.name === c.name));
+  if (!available.length) return;
+
+  const pick = available[Math.floor(Math.random() * available.length)];
+  placed.push(pick);
+  const rollNum = placed.length;
+  history.push({ ...pick, roll: rollNum });
+
+  renderCounters(pick.name);
+  renderResult(pick, rollNum);
+  renderProgress();
+  renderHistory();
+  document.getElementById('confirmBox').style.display = 'none';
+
+  if (placed.length === COUNTERS.length) {
+    document.getElementById('rollBtn').disabled = true;
+    document.getElementById('allDone').style.display = 'block';
+    document.getElementById('rollResult').style.display = 'none';
+  }
+}
+
+function renderCounters(newest) {
+  const grid = document.getElementById('countersGrid');
+  document.getElementById('emptyMsg').style.display = placed.length ? 'none' : '';
+  grid.querySelectorAll('.counter-pill').forEach(e => e.remove());
+  placed.forEach(c => {
+    const pill = document.createElement('span');
+    pill.className = `counter-pill ${c.type}${c.name === newest ? ' new' : ''}`;
+    pill.textContent = c.name;
+    grid.appendChild(pill);
+  });
+}
+
+function renderResult(counter, num) {
+  const box = document.getElementById('rollResult');
+  box.style.display = 'block';
+  document.getElementById('rollNumber').textContent = num;
+  const nameEl = document.getElementById('rolledName');
+  nameEl.textContent = counter.name;
+  nameEl.className = 'rolled-name ' + (counter.type === 'plus' ? 'plus-color' : 'keyword-color');
+}
+
+function renderProgress() {
+  const n = placed.length, total = COUNTERS.length;
+  const pct = Math.round((n / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${n} of ${total} counters`;
+  document.getElementById('progressPct').textContent = pct + '%';
+}
+
+function renderHistory() {
+  const section = document.getElementById('historySection');
+  const list = document.getElementById('historyList');
+  section.style.display = 'block';
+  list.innerHTML = '';
+  [...history].reverse().forEach(h => {
+    const li = document.createElement('li');
+    li.className = 'history-item';
+    li.innerHTML = `
+      <span class="history-roll-num">#${h.roll}</span>
+      <span class="history-name ${h.type}">${h.name}</span>
+      <span class="history-stat">${h.roll}/${COUNTERS.length}</span>
+    `;
+    list.appendChild(li);
+  });
+}
+
+function askReset() {
+  document.getElementById('confirmBox').style.display = 'block';
+}
+
+function cancelReset() {
+  document.getElementById('confirmBox').style.display = 'none';
+}
+
+function doReset() {
+  placed = [];
+  history = [];
+  renderCounters(null);
+  renderProgress();
+  document.getElementById('rollResult').style.display = 'none';
+  document.getElementById('allDone').style.display = 'none';
+  document.getElementById('confirmBox').style.display = 'none';
+  document.getElementById('rollBtn').disabled = false;
+  document.getElementById('historySection').style.display = 'none';
+  document.getElementById('historyList').innerHTML = '';
+  document.getElementById('emptyMsg').style.display = '';
+}
+</script>
+</body>
+</html>
