@@ -10,11 +10,12 @@
     --on:#111214; --off:#80838c;
   }
   *{box-sizing:border-box}
+  html{touch-action:manipulation}  /* no double-tap zoom; pinch zoom still works */
   html,body{margin:0;background:var(--bg);color:var(--text);
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   main{max-width:560px;margin:0 auto;padding:20px 16px 40px}
-  h1{font-size:1.25rem;margin:0 0 4px}
-  .sub{color:var(--muted);font-size:.9rem;margin:0 0 16px;line-height:1.4}
+  h1{font-size:1.25rem;margin:0 0 6px;text-align:center}
+  .sub{color:var(--muted);font-size:min(.78rem,2.85vw);margin:0 0 16px;line-height:1.5;text-align:center}
 
   /* ---------- card ---------- */
   .card{position:relative;width:100%;aspect-ratio:745/1040;container-type:inline-size;
@@ -67,13 +68,15 @@
   .panel ul{margin:8px 0 0;padding-left:18px;color:var(--muted)}
   .log{margin-top:10px;border-top:1px solid #3a3e47;padding-top:8px;color:#8a8d94;font-size:.85rem}
   .log ol{margin:4px 0 0;padding-left:20px}
-  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  /* reduce motion: keep the colour-only roll highlight, drop zoom/pop effects */
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}
+    .sym:hover,.sym.flash{transform:none}}
 </style>
 </head>
 <body>
 <main>
   <h1>Crystalline Giant – Counter Tracker</h1>
-  <p class="sub">Click the <b>artwork</b> to resolve the beginning-of-combat trigger. Click a <b>symbol</b> to add/remove that counter by hand. Click <b>Reset</b> (bottom centre) to start over.</p>
+  <p class="sub">Click the <b>artwork</b> to resolve the beginning-of-combat trigger.<br>Click a <b>symbol</b> to add/remove that counter by hand.<br>Click <b>Reset</b> (bottom centre) to start over.</p>
 
   <div class="card" id="card">
     <button class="zone art" id="art" aria-label="Roll: resolve the beginning-of-combat trigger">
@@ -176,7 +179,6 @@ $('art').addEventListener('click', () => {
     return;
   }
   const pick = pool[randIndex(pool.length)];
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const finish = () => {
     pool.forEach(c => $('sym-' + c.id).classList.remove('flash'));
     state[pick.id] = true; rolling = false; $('art').classList.remove('rolling');
@@ -184,16 +186,30 @@ $('art').addEventListener('click', () => {
     addLog(`Roll ${rollNo}: ${pick.name}  (chance 1/${pool.length})`);
     render(pick.id);
   };
-  if (reduce || pool.length === 1){ finish(); return; }
+  if (pool.length === 1){ finish(); return; }
 
   /* short "slot machine" highlight through the remaining kinds, then land on the pick */
   rolling = true; $('art').classList.add('rolling'); setStatus('Rolling…');
-  let steps = 10 + randIndex(pool.length), i = randIndex(pool.length), delay = 50;
+  /* random jumps between the remaining kinds (never the same one twice in a row);
+     the last highlight is always the actual result */
+  let steps = 10 + randIndex(pool.length), prev = -1, delay = 50;
+  const pickIdx = pool.indexOf(pick);
   const tick = () => {
     pool.forEach(c => $('sym-' + c.id).classList.remove('flash'));
-    if (steps-- <= 0){ finish(); return; }
-    $('sym-' + pool[i % pool.length].id).classList.add('flash'); i++;
-    delay *= 1.08; setTimeout(tick, delay);
+    if (steps < 0){ finish(); return; }
+    let j;
+    if (steps === 0) j = pickIdx;
+    else {
+      /* build the allowed set explicitly (no retry loop that could spin forever);
+         fall back to looser rules when few kinds remain */
+      const all = pool.map((_, k) => k);
+      let cand = all.filter(k => k !== prev && !(steps === 1 && k === pickIdx));
+      if (!cand.length) cand = all.filter(k => k !== prev);
+      if (!cand.length) cand = all;
+      j = cand[randIndex(cand.length)];
+    }
+    $('sym-' + pool[j].id).classList.add('flash'); prev = j; steps--;
+    delay *= 1.08; setTimeout(tick, steps < 0 ? 450 : delay);
   };
   tick();
 });
